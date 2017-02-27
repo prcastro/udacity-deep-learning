@@ -9,11 +9,11 @@ import numpy as np
 
 class Node(object):
     def __init__(self, inbound_nodes=[]):
+        self.value = None
         self.inbound_nodes = inbound_nodes
         self.outbound_nodes = []
-        for n in self.inbound_nodes:
-            n.outbound_nodes.append(self)
-        self.value = None
+        for node in self.inbound_nodes:
+            node.outbound_nodes.append(self)
 
     def forward(self):
         """
@@ -26,10 +26,9 @@ class Node(object):
 
     def backward(self):
         """
-        Every node that uses this class as a base class will
-        need to define its own `backward` method.
+        Computes the gradient of this node with respect to the inbound nodes
         """
-        raise NotImplementedError
+        raise NotImplementedError('backward pass  not implemented for this node')
 
 
 class Input(Node):
@@ -43,11 +42,14 @@ class Input(Node):
     def backward(self):
         self.gradients = {self: 0}
         for node in self.outbound_nodes:
-            grad_cost = node.gradients[self]
-            self.gradients[self] += grad_cost * 1
+            self.gradients[self] += node.gradients[self]
 
 
 class Add(Node):
+    """
+    Computes the addition of its inputs
+    """
+
     def __init__(self, *inputs):
         Node.__init__(self, inputs)
 
@@ -56,6 +58,10 @@ class Add(Node):
 
 
 class Mul(Node):
+    """
+    Computes the product of its inputs
+    """
+
     def __init__(self, *inputs):
         Node.__init__(self, inputs)
 
@@ -73,13 +79,9 @@ class Linear(Node):
         input_values = self.inbound_nodes[0]
         weights = self.inbound_nodes[1]
         bias = self.inbound_nodes[2]
-
         self.value = np.dot(input_values.value, weights.value) + bias.value
 
     def backward(self):
-        """
-        Calculates the gradient based on the output values.
-        """
         inputs = self.inbound_nodes[0]
         weights = self.inbound_nodes[1]
         bias = self.inbound_nodes[2]
@@ -93,11 +95,15 @@ class Linear(Node):
 
 
 class Sigmoid(Node):
+    """
+    Computes the sigmoid function of its inputs
+    """
+
     def __init__(self, node):
         Node.__init__(self, [node])
 
     def _sigmoid(self, x):
-        return 1/(1 + np.exp(-x))
+        return 1 / (1 + np.exp(-x))
 
     def forward(self):
         inputs = self.inbound_nodes[0]
@@ -124,7 +130,7 @@ class MSE(Node):
 
     def forward(self):
         """
-        Calculates the mean squared error.
+        Computes the mean squared error.
         """
         # NOTE: We reshape these to avoid possible matrix/vector broadcast
         # errors.
@@ -142,11 +148,12 @@ class MSE(Node):
 
     def backward(self):
         """
-        Calculates the gradient of the cost.
-
-        This is the final node of the network so outbound nodes
-        are not a concern.
+        Computes the gradient of this node with respect to the inbound
         """
+
+        # This is the final node of the network so outbound nodes
+        # are not a concern.
+
         y = self.inbound_nodes[0]
         a = self.inbound_nodes[1]
         num_examples = len(y.value)
@@ -160,16 +167,18 @@ def topological_sort(feed_dict):
     """
     Sort generic nodes in topological order using Kahn's Algorithm.
 
-    `feed_dict`: A dictionary where the key is a `Input` node and the value is
-    the respective value feed to that node.
+    Arguments:
+
+        `feed_dict`: A dictionary where the key is a `Input` node and the value is
+                     the respective value feed to that node.
 
     Returns a list of sorted nodes.
     """
 
-    input_nodes = [n for n in feed_dict.keys()]
+    input_nodes = [node for node in feed_dict.keys()]
 
     G = defaultdict(lambda: {'in': set(), 'out': set()})
-    nodes = [n for n in input_nodes]
+    nodes = [node for node in input_nodes]
     while len(nodes) > 0:
         n = nodes.pop(0)
         for m in n.outbound_nodes:
@@ -203,11 +212,11 @@ def forward_and_backward(graph):
 
         `graph`: The result of calling `topological_sort`.
     """
-    for n in graph:
-        n.forward()
+    for node in graph:
+        node.forward()
 
-    for n in graph[::-1]:
-        n.backward()
+    for node in reversed(graph):
+        node.backward()
 
 
 def sgd_update(trainables, learning_rate=1e-2):
