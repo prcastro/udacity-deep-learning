@@ -49,7 +49,6 @@ class Add(Node):
     """
     Computes the addition of its inputs
     """
-
     def __init__(self, *inputs):
         Node.__init__(self, inputs)
 
@@ -61,7 +60,6 @@ class Mul(Node):
     """
     Computes the product of its inputs
     """
-
     def __init__(self, *inputs):
         Node.__init__(self, inputs)
 
