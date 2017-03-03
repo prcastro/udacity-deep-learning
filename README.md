@@ -1,2 +1,3 @@
 # udacity-deep-learning
-Submissions for Deep Learning Nanodegree on Udacity 
+
+Submissions for Deep Learning Nanodegree on Udacity
