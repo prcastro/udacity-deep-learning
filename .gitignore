@@ -87,3 +87,10 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# pickle files
+*.p
+
+# zips
+*.tar
+*.tar.gz
