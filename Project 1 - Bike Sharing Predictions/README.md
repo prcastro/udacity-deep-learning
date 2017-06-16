@@ -1,1 +1,3 @@
-# Project 1 - Bike Sharing Predictions
+# Bike Sharing Predictions
+
+Predicting daily bike rental ridership using Neural Networks.
