@@ -1,1 +1,3 @@
-# Project 2 - Image Classification
+# Image Classification
+
+Using Deep Neural Networks to classify images
